@@ -24,7 +24,6 @@ void stateMachine() {
     stateSwitch();
   }
 
-  uint16_t checksum;  
   // run functions based off of the current state
   switch(state) {
     ///// Ascent /////

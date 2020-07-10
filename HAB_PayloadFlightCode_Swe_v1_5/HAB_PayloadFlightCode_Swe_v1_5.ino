@@ -1,3 +1,16 @@
+#include <Adafruit_BusIO_Register.h>
+#include <Adafruit_I2CDevice.h>
+#include <Adafruit_I2CRegister.h>
+#include <Adafruit_SPIDevice.h>
+
+#include <Adafruit_LSM9DS1.h>
+
+#include <Adafruit_LSM9DS1.h>
+
+#include <SPI.h>
+
+#include <SD.h>
+
 /**********************************************************************
    NAME: HAB_Transmitter.ino
 
@@ -128,7 +141,7 @@ void setup() {
 
   /************SD CARD**************/
   sdCount = 0;
-  if (!SD.begin(chipSelect)) {
+  if (!SD.begin(chipSelect)) { // CHANGE BACK TO WHILE
     delay(200);
   }
   //Read and set file number and name
@@ -145,6 +158,7 @@ void setup() {
   timeSD = millis();
 
   /************GPS SERIALS**********/
+  
   gpsuBloxExt.begin(9600);
   packet_number = 0;
   time_packet = millis();
@@ -233,12 +247,13 @@ void write_cdu1_data() {
   flightData.write(cdu1Packet_rx, CDU_RX_SIZE);
 
   if (millis() < STARTUP_TIME_LIMIT) {          // For pre-launch data check
+    Serial.println("CDU A Stuff");
     Serial.print(millis(), DEC);
     Serial.write(" / ");
     Serial.print(STARTUP_TIME_LIMIT, DEC);
     Serial.write(" ms. CDU 1 Packet: ");
     for (read_counter = 0; read_counter < CDU_RX_SIZE; read_counter++) {
-      Serial.print(cdu1Packet_rx[read_counter]);
+      Serial.print(cdu1Packet_rx[read_counter],HEX);
       Serial.write("  ");
     }
     Serial.write("\n");
@@ -369,7 +384,7 @@ void write_sps_data() {
   for(read_counter = 8; read_counter < 23; read_counter++) {        // Discard GPS + time data
     Serial2.read();
   }
-  for(read_counter = 23; read_counter < 85; read_counter++) {        // Get rest of data
+  for(read_counter = 23; read_counter < 86; read_counter++) {        // Get rest of data
     umnPacket[write_counter++] = Serial2.read();
   }
   Serial2.read();       // STOP byte
@@ -532,7 +547,6 @@ void write_turbulence_data() {
 
 void loop()
 {
-    
   if(millis() - time_packet > 999) {
     time_packet = millis();               // relative time stamp - close to GPS time stamp
     write_erau_data();
@@ -590,20 +604,21 @@ void loop()
   }
       
   /********CDU CHECKS-ACTIONS********/
-    
+
   while(Serial4.available() > CDU_RX_SIZE-1) {
     
     cdu1_start = uint16_t(Serial4.read()) << 8;
     cdu1_start += uint16_t(Serial4.read());
 //    if (cdu1_start == 0x4261) {             // Cutter A
       if (cdu1_start == 0x4241) { 
+      Serial.println("WRITING CDU1 DATA");
       write_cdu1_data();
-    }
+      }
 
-    cdu1_watchdog = millis();
+   cdu1_watchdog = millis();
   }
 
-  if ((millis() - cdu1_watchdog) > 3000) {
+ if ((millis() - cdu1_watchdog) > 3000) {
     // BLUETOOTH WATCHDOG: RE-ESTABLISH BLUETOOTH CONNECTION
   }
 
@@ -649,6 +664,18 @@ void loop()
   WDOG_REFRESH = 0xA602;
   WDOG_REFRESH = 0xB480;
   interrupts();
+
+  // sendConfirmation();
+
+  /*if(millis()-thisStamp == 1000) 
+  {
+    thisStamp = millis();
+    Serial4.println();
+    Serial4.print(0x42);
+    Serial4.println();
+  }*/
+
+  
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

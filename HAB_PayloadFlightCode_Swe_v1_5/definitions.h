@@ -34,18 +34,21 @@ byte id_erau[2] = {0xA0, 0xB1};//Identifier for GPS + ERAU packet.
 uint16_t type = 0;             //Identifier for type of turbulence packet.
 uint16_t sps_start = 0;        //Identifier for SPS30 data packet.
 uint16_t erau_checksum = 0;
+uint16_t checksum = 0;  // umn checksum
 
 uint16_t sps_packet_number = 0;// Used to test whether packets are being skipped - may be removed later
 uint16_t cu_packet_number = 0; // Used to test whether packets are being skipped - may be removed later
 
 //ARRAY SIZE CONSTANTS
 #define GPS_SIZE 47             // Number of bytes in GPS + ERAU packet
-#define SPS_SIZE 74             // Number of bytes in SPS30 packet
+#define SPS_SIZE 72             // Number of bytes in SPS30 packet
 #define INSTRUMENT_SIZE 67      // Number of bytes in instrument packet
 #define GONDOLA_SIZE 50         // Number of bytes in gondola packet
 #define RAW_SIZE 73             // Number of bytes in raw packet
-#define CDU_RX_SIZE 23          // Number of bytes in CDU packet
+#define CDU_RX_SIZE 27          // Number of bytes in CDU packet
 #define CDU_TX_SIZE 6           // Number of bytes to send to CDU
+
+#define gpsuBloxExt Serial3
 
 //CODES FOR BLUETOOTH
 byte CUT_A_command = 0x15;      // Gondola to cutter A - CUT command
@@ -53,6 +56,8 @@ byte CUT_B_command = 0x25;      // Gondola to cutter B - CUT command
 
 byte cdu1Packet_tx[CDU_TX_SIZE] = {0x42, 0x61, CUT_A_command, 0, 0, 0x53};
 byte cdu2Packet_tx[CDU_TX_SIZE] = {0x42, 0x62, CUT_B_command, 0, 0, 0x53};
+byte MTcdu1Packet_tx[CDU_TX_SIZE] = {0x42, 0x61, 0x30, 0, 0, 0x53};
+byte MTcdu2Packet_tx[CDU_TX_SIZE] = {0x42, 0x62, 0x30, 0, 0, 0x53};
 
 byte erauPacket[GPS_SIZE];      //Scientific data packet byte array.
 byte umnPacket[SPS_SIZE];       //UMN - SPS30 packet
@@ -197,3 +202,6 @@ bool cutStatusA = false, cutStatusB = false;
 bool cutterOnA = false,  cutterOnB = false;
 String cutReasonA,  cutReasonB;
 String stateString;
+
+unsigned long thisStamp = 0;
+#define M2MS 60000
